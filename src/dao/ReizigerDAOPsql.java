@@ -39,13 +39,12 @@ public class ReizigerDAOPsql implements ReizigerDAO {
             prepStatement.setDate(5, reiziger.getGeboortedatum());
 
             prepStatement.execute();
-            adao.save(reiziger.getAdres());
+            if(reiziger.getAdres() != null){
+                adao.save(reiziger.getAdres());
+            }
+
             for(OVChipkaart ov : reiziger.getOvchipkaarten()){
-                if(odao.findByReiziger(reiziger).contains(ov)){
-                    odao.update(ov);
-                } else {
-                    odao.save(ov);
-                }
+                odao.save(ov);
             }
 
             boolean complete = prepStatement.execute();
@@ -78,7 +77,6 @@ public class ReizigerDAOPsql implements ReizigerDAO {
             prepStatement.setDate(4, reiziger.getGeboortedatum());
             prepStatement.setInt(5, reiziger.getId());
 
-            adao.update(reiziger.getAdres());
 
             for(OVChipkaart ov : odao.findByReiziger(reiziger)){
                 if(!reiziger.getOvchipkaarten().contains(ov)){
@@ -86,12 +84,12 @@ public class ReizigerDAOPsql implements ReizigerDAO {
                 }
             }
 
+            if(reiziger.getAdres() != null) {
+                adao.update(reiziger.getAdres());
+            }
+
             for(OVChipkaart ov : reiziger.getOvchipkaarten()){
-                if(odao.findByReiziger(reiziger).contains(ov)){
-                    odao.update(ov);
-                } else {
-                    odao.save(ov);
-                }
+                odao.save(ov);
             }
 
             boolean complete = prepStatement.execute();
@@ -110,7 +108,10 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
     @Override
     public boolean delete(Reiziger reiziger) throws SQLException {
-        adao.delete(reiziger.getAdres());
+        if(reiziger.getAdres() != null){
+            adao.delete(reiziger.getAdres());
+        }
+
         for(OVChipkaart ov : reiziger.getOvchipkaarten()){
             odao.delete(ov);
         }
@@ -174,14 +175,14 @@ public class ReizigerDAOPsql implements ReizigerDAO {
     }
 
     @Override
-    public List<Reiziger> findByGbDatum(String Datum) {
+    public List<Reiziger> findByGbDatum(Date Datum) {
         try{
             PreparedStatement prepStatement = conn. prepareStatement("""
                                                                         SELECT reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum
                                                                         FROM public.reiziger
                                                                         WHERE geboortedatum = ?;
                                                                         """);
-            prepStatement.setDate(1, Date.valueOf(Datum));
+            prepStatement.setDate(1, Datum);
             ResultSet rs = prepStatement.executeQuery();
 
             Reiziger reiziger = null;

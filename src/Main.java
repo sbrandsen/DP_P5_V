@@ -163,7 +163,7 @@ public class Main {
 
         // Vind reiziger(s) van bepaalde datum
         String testdatum = "2002-12-03";
-        reizigers = rdao.findByGbDatum(testdatum);
+        //reizigers = rdao.findByGbDatum(testdatum);
         System.out.println("[Test] ReizigerDAO.findByGbDatum() geeft de volgende reizigers bij datum " + testdatum + ":");
         for (Reiziger r : reizigers) {
             System.out.println(r);

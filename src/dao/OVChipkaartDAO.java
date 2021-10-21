@@ -12,7 +12,6 @@ public interface  OVChipkaartDAO {
     public boolean delete(OVChipkaart ovchipkaart) throws SQLException;
 
     public List<OVChipkaart> findByReiziger(Reiziger reiziger) throws SQLException;
-    public OVChipkaart findById(int id) throws SQLException;
 
     public List<OVChipkaart> findAll();
 }

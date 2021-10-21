@@ -4,10 +4,7 @@ import DP_P5.domein.OVChipkaart;
 import DP_P5.domein.Product;
 import DP_P5.domein.Reiziger;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,9 +28,7 @@ public class OVChipkaartDAOpsql implements OVChipkaartDAO {
 
     @Override
     public boolean save(OVChipkaart ovchipkaart) throws SQLException {
-        for(Product p : ovchipkaart.getProducten()){
-            //
-        }
+
         try{
             PreparedStatement prepStatement = conn.prepareStatement("""
                                                                         INSERT INTO public.ov_chipkaart
@@ -82,11 +77,6 @@ public class OVChipkaartDAOpsql implements OVChipkaartDAO {
 
             boolean complete = prepStatement.execute();
             prepStatement.close();
-
-            for(Product p : ovchipkaart.getProducten()){
-                //
-            }
-
             return complete;
 
         } catch(SQLException ex) {
@@ -103,10 +93,6 @@ public class OVChipkaartDAOpsql implements OVChipkaartDAO {
 
     @Override
     public boolean delete(OVChipkaart ovchipkaart) throws SQLException {
-        for(Product p : ovchipkaart.getProducten()){
-            //
-        }
-
         try{
             PreparedStatement prepStatement = conn.prepareStatement("""
                                                                         DELETE FROM public.ov_chipkaart
@@ -135,25 +121,38 @@ public class OVChipkaartDAOpsql implements OVChipkaartDAO {
     @Override
     public List<OVChipkaart> findByReiziger(Reiziger reiziger) throws SQLException {
         try{
-            PreparedStatement prepStatement = conn.prepareStatement("""
-                                                                        SELECT kaart_nummer, geldig_tot, klasse, saldo, reiziger_id
-                                                                        FROM public.ov_chipkaart
-                                                                        WHERE reiziger_id = ?;
-                                                                        """);
-            prepStatement.setInt(1, reiziger.getId());
-            ResultSet rs = prepStatement.executeQuery();
+            List<Product> products = pdao.findAll();
 
-            List<OVChipkaart> ovchipkaart = new ArrayList<OVChipkaart>();
+            String query = "SELECT * FROM ov_chipkaart WHERE reiziger_id = ?";
+            PreparedStatement ps = conn.prepareStatement(query);
+            ResultSet rs = ps.executeQuery();
+            List<OVChipkaart> chipkaarten = new ArrayList<>();
 
-            while (rs.next() ) {
-                ovchipkaart.add(new OVChipkaart(rs.getInt("kaart_nummer"), rs.getDate("geldig_tot"), rs.getInt("klasse"),
-                        rs.getInt("saldo"), reiziger));
+            while (rs.next()){
+                int kaartNummer = rs.getInt("kaart_nummer");
+                Date geldigTot = rs.getDate("geldig_tot");
+                int klasse = rs.getInt("klasse");
+                double saldo = rs.getDouble("saldo");
+                int reizigerId = rs.getInt("reiziger_id");
+                OVChipkaart ovChipkaart = new OVChipkaart(kaartNummer, geldigTot, klasse, saldo, rdao.findById(reizigerId));
+
+                for (Product product : products){
+                    if (product.getChipkaartsnummers().size() != 0){
+                        for (int nummer : product.getChipkaartsnummers()){
+                            if (nummer == kaartNummer){
+                                ovChipkaart.addProduct(product);
+                            }
+                        }
+                    }
+                }
+
+                chipkaarten.add(ovChipkaart);
             }
 
-            prepStatement.close();
+            ps.close();
             rs.close();
 
-            return ovchipkaart;
+            return chipkaarten;
         } catch (SQLException ex){
             System.out.println("SQLException - could not ovchipkaart by id " + reiziger.getId());
             return null;
@@ -164,57 +163,40 @@ public class OVChipkaartDAOpsql implements OVChipkaartDAO {
     }
 
     @Override
-    public OVChipkaart findById(int id) throws SQLException {
-        try{
-            PreparedStatement prepStatement = conn.prepareStatement("""
-                                                                        SELECT kaart_nummer, geldig_tot, klasse, saldo, reiziger_id
-                                                                        FROM public.ov_chipkaart
-                                                                        WHERE kaart_nummer = ?;
-                                                                        """);
-            prepStatement.setInt(1, id);
-            ResultSet rs = prepStatement.executeQuery();
-
-            OVChipkaart ovchipkaart = null;
-
-            while (rs.next() ) {
-                ovchipkaart = new OVChipkaart(rs.getInt("kaart_nummer"), rs.getDate("geldig_tot"), rs.getInt("klasse"),
-                        rs.getInt("saldo"), rdao.findById(rs.getInt("reiziger_id")));
-            }
-
-            prepStatement.close();
-            rs.close();
-
-            return ovchipkaart;
-        } catch (SQLException ex){
-            System.out.println("SQLException - could not ovchipkaart by id " + id);
-            return null;
-        } catch(Exception ex) {
-            System.out.println("Error - could not ovchipkaart by id " + id);
-            return null;
-        }
-    }
-
-    @Override
     public List<OVChipkaart> findAll() {
+        try {
 
-        try{
-            PreparedStatement prepStatement = conn.prepareStatement("""
-                                                                        SELECT kaart_nummer, geldig_tot, klasse, saldo, reiziger_id
-                                                                        FROM public.ov_chipkaart;
-                                                                        """);
-            ResultSet rs = prepStatement.executeQuery();
+            List<Product> products = pdao.findAll();
 
-            List<OVChipkaart> ovchipkaart = new ArrayList<OVChipkaart>();
+            String query = "SELECT * FROM ov_chipkaart";
+            PreparedStatement ps = conn.prepareStatement(query);
+            ResultSet rs = ps.executeQuery();
 
-            while (rs.next() ) {
-                ovchipkaart.add(new OVChipkaart(rs.getInt("kaart_nummer"), rs.getDate("geldig_tot"), rs.getInt("klasse"),
-                        rs.getInt("saldo"), rdao.findById(rs.getInt("reiziger_id"))));
+            List<OVChipkaart> chipkaarts = new ArrayList<>();
+
+            while (rs.next()){
+                int kaartNummer = rs.getInt("kaart_nummer");
+                Date geldigTot = rs.getDate("geldig_tot");
+                int klasse = rs.getInt("klasse");
+                double saldo = rs.getDouble("saldo");
+                int reizigerId = rs.getInt("reiziger_id");
+                OVChipkaart ovChipkaart = new OVChipkaart(kaartNummer, geldigTot, klasse, saldo, rdao.findById(reizigerId));
+
+                for (Product product : products){
+                    if (product.getChipkaartsnummers().size() != 0){
+                        for (int nummer : product.getChipkaartsnummers()){
+                            if (nummer == kaartNummer){
+                                ovChipkaart.addProduct(product);
+                            }
+                        }
+                    }
+                }
+
+                chipkaarts.add(ovChipkaart);
             }
-
-            prepStatement.close();
+            ps.close();
             rs.close();
-
-            return ovchipkaart;
+            return chipkaarts;
         } catch (SQLException ex){
             System.out.println("SQLException - could not get ovchipkaarten");
             return null;

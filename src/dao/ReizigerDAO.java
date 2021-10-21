@@ -2,6 +2,7 @@ package DP_P5.dao;
 
 import DP_P5.domein.Reiziger;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -12,7 +13,7 @@ public interface ReizigerDAO {
 
     public Reiziger findById(int id) throws SQLException;
 
-    public List<Reiziger> findByGbDatum(String Datum);
+    public List<Reiziger> findByGbDatum(Date Datum);
     public List<Reiziger> findAll();
 
 }

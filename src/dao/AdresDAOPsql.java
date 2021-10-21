@@ -43,6 +43,9 @@ public class AdresDAOPsql implements AdresDAO {
 
             return prepStatement.execute();
 
+        } catch(SQLException ex) {
+            System.out.println("SQLException - could not save adres " + adres.toString());
+            return false;
         } catch(Exception ex) {
             System.out.println("Error - could not save adres\n" +adres.toString());
             ex.printStackTrace();
@@ -53,21 +56,24 @@ public class AdresDAOPsql implements AdresDAO {
     @Override
     public boolean update(Adres adres) throws SQLException {
         try{
-            PreparedStatement prepStatement = conn.prepareStatement("""
-                                                                        UPDATE public.adres
-                                                                        SET adres_id=?, postcode=?, huisnummer=?, straat=?, woonplaats=?
-                                                                        WHERE reiziger_id=?;
-                                                                        """);
+            PreparedStatement ps = conn.prepareStatement("""
+                                                             UPDATE public.adres
+                                                             SET postcode=?, huisnummer=?, straat=?, woonplaats=?, reiziger_id=?
+                                                             WHERE adres_id=?;
+                                                             """);
 
-            prepStatement.setInt(1, adres.getId());
-            prepStatement.setString(2, adres.getPostcode());
-            prepStatement.setString(3, adres.getHuisnummer());
-            prepStatement.setString(4, adres.getStraat());
-            prepStatement.setString(5, adres.getWoonplaats());
-            prepStatement.setInt(6, adres.getReiziger().getId());
+            ps.setString(1, adres.getPostcode());
+            ps.setString(2, adres.getHuisnummer());
+            ps.setString(3, adres.getStraat());
+            ps.setString(4, adres.getWoonplaats());
+            ps.setInt(5, adres.getReiziger().getId());
+            ps.setInt(6, adres.getId());
 
-            return prepStatement.execute();
+            return ps.execute();
 
+        } catch(SQLException ex) {
+            System.out.println("SQLException - could not update adres " + adres.toString());
+            return false;
         } catch(Exception ex) {
             System.out.println("Error - could not update adres\n" +adres.toString());
             return false;
@@ -96,24 +102,30 @@ public class AdresDAOPsql implements AdresDAO {
     @Override
     public Adres findbyReiziger(Reiziger reiziger) {
         try{
-            PreparedStatement prepStatement = conn.prepareStatement("""
-                                                                        SELECT adres_id, postcode, huisnummer, straat, woonplaats, reiziger_id
-                                                                        FROM public.adres
-                                                                        WHERE reiziger_id = ?;
-                                                                        """);
-            prepStatement.setInt(1, reiziger.getId());
-            ResultSet rs = prepStatement.executeQuery();
+            String query =  """
+                            SELECT * FROM adres
+                            WHERE reiziger_id = ?"
+                            """;
 
-            Adres adres = null;
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setInt(1, reiziger.getId());
+            ResultSet rs = ps.executeQuery();
 
-            while (rs.next() ) {
-                //adres = new Adres(rs.getInt("adres_id"), rs.getString("postcode"), rs.getString("huisnummer"),
-                        //rs.getString("straat"), rs.getString("woonplaats"))
-            }
-
+            rs.next();
+            int adres_id = rs.getInt("adres_id");
+            String postcode = rs.getString("postcode");
+            String huisnummer = rs.getString("huisnummer");
+            String straat = rs.getString("straat");
+            String woonplaats = rs.getString("woonplaats");
+            Adres adres = new Adres(adres_id, postcode, huisnummer, straat, woonplaats, reiziger);
+            ps.close();
             return adres;
+
+        } catch(SQLException ex) {
+            System.out.println("SQLException - could not find by reiziger " + reiziger.toString());
+            return null;
         } catch(Exception ex) {
-            System.out.println("Error - could not find adres by id: " + reiziger.getId());
+            System.out.println("Error - could not find by reiziger " + reiziger.toString());
             return null;
         }
     }
@@ -121,23 +133,32 @@ public class AdresDAOPsql implements AdresDAO {
     @Override
     public List<Adres> findAll() {
         try{
-            PreparedStatement prepStatement = conn.prepareStatement("""
-                                                                        SELECT *
-                                                                        FROM public.adres;
-                                                                        """);
+            PreparedStatement ps = conn.prepareStatement("""
+                                                             SELECT *
+                                                             FROM public.adres;
+                                                             """);
 
-            ResultSet rs = prepStatement.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
-            Adres adres = null;
             List<Adres> adresList = new ArrayList<Adres>();
 
             while (rs.next() ) {
-                //adres = new Adres(rs.getInt("adres_id"), rs.getString("adres_id"), rs.getString("huisnummer"),
-                        //.getString("straat"), rs.getString("woonplaats"), rs.getInt("reiziger_id"));
-                adresList.add(adres);
+                int id = rs.getInt("adres_id");
+                String postcode = rs.getString("postcode");
+                String huisnummer = rs.getString("huisnummer");
+                String straat = rs.getString("straat");
+                String woonplaats = rs.getString("woonplaats");
+                int reiziger_id = rs.getInt("reiziger_id");
+                adresList.add(new Adres(id, postcode, huisnummer, straat, woonplaats, rdao.findById(reiziger_id)));
             }
 
+            ps.close();
+            rs.close();
+
             return adresList;
+        } catch(SQLException ex) {
+            System.out.println("SQLException - could not find all adressen");
+            return null;
         } catch(Exception ex) {
             System.out.println("Error - could not find all adressen");
             return null;

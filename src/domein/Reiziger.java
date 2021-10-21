@@ -83,15 +83,18 @@ public class Reiziger {
         if(!(adres == null)){
             outString += adres.toString();
         }
-        if(ovchipkaarten.size() > 0){
-            outString += "\nChipkaarten:";
-            StringBuilder sb = new StringBuilder();
-            for(OVChipkaart ov : ovchipkaarten){
-                sb.append("\n").append(ov.toString());
+        if(ovchipkaarten != null){
+            if(ovchipkaarten.size() > 0){
+                outString += "\nChipkaarten:";
+                StringBuilder sb = new StringBuilder();
+                for(OVChipkaart ov : ovchipkaarten){
+                    sb.append("\n").append(ov.toString());
+                }
+                outString += sb;
+            } else{
+                outString += "\nBezit geen chipkaarten";
             }
-            outString += sb;
-        } else{
-            outString += "\nBezit geen chipkaarten";
+
         }
 
 

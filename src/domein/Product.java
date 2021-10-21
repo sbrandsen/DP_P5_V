@@ -8,7 +8,7 @@ public class Product {
     private String naam;
     private String beschrijving;
     private double prijs;
-    private List<OVChipkaart> ovchipkaarten = new ArrayList<>();
+    private List<Integer> chipkaartsnummers = new ArrayList<>();
 
     public Product(int product_nummer, String product, String beschrijving, double prijs) {
         this.product_nummer = product_nummer;
@@ -21,24 +21,23 @@ public class Product {
         return product_nummer;
     }
 
-    public List<OVChipkaart> getOvchipkaarten() {
-        return ovchipkaarten;
+    public List<Integer> getOvchipkaarten() {
+        return chipkaartsnummers;
     }
 
-    public void setOvchipkaarten(List<OVChipkaart> ovchipkaarten) {
-        this.ovchipkaarten = ovchipkaarten;
+    public List<Integer> getChipkaartsnummers() {
+        return chipkaartsnummers;
     }
 
-    public void addOvchipkaart(OVChipkaart ovChipkaart){
-        ovchipkaarten.add(ovChipkaart);
+    public boolean addChipkaartNummer(Integer chipkaartnummer) {
+        this.chipkaartsnummers.add(chipkaartnummer);
+        return this.chipkaartsnummers.contains(chipkaartnummer);
     }
 
-    public void deleteOvchipkaart(OVChipkaart ovChipkaart){
-        if (ovchipkaarten.contains(ovChipkaart)) {
-            ovchipkaarten.remove(ovChipkaart);
-        }
+    public boolean removeChipkaartNummer(Integer chipkaartnummer){
+        this.chipkaartsnummers.remove(chipkaartnummer);
+        return !this.chipkaartsnummers.contains(chipkaartnummer);
     }
-
     public void setProduct_nummer(int product_nummer) {
         this.product_nummer = product_nummer;
     }
